@@ -42,7 +42,6 @@ const MultiStepForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [referral, setReferral] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("");
 
@@ -60,6 +59,14 @@ const MultiStepForm = () => {
   const [preferredFromTime, setPreferredFromTime] = useState("");
   const [preferredToTime, setPreferredToTime] = useState("");
   const [availableTimes, setAvailableTimes] = useState([]);
+  const generateReferralId = () => {
+    const specialChars = 'ALF-REFID-';
+    const randomNum = Math.floor(10000 + Math.random() * 90000); // Ensures a 5-digit number
+    return specialChars + randomNum;
+    };
+
+    // Initialize the referral ID when the component is loaded
+    const [referral, setReferral] = useState(generateReferralId());
 
   /**
    * Handles phone number changes
@@ -205,6 +212,7 @@ const MultiStepForm = () => {
         startDate: startDate.toISOString(),
         endDate: toDate.toISOString(),
         evaluationStatus: "PENDING",
+        refernceId: referral,
         status: "Active",
         createdBy: "SYSTEM",
         lastUpdatedBy: "SYSTEM",
