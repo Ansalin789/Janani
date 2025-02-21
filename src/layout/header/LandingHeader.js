@@ -105,7 +105,7 @@
                     </div>
                   </div>
                   <div className="header-button">
-                    <Link legacyBehavior href="contact">
+                    <Link legacyBehavior href="/StudentForm">
                     Book Free Session
                     </Link>
                   </div>

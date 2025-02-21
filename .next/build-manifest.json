@@ -15,10 +15,15 @@
   ],
   "rootMainFiles": [],
   "pages": {
-    "/HiringForm": [
+    "/": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/HiringForm.js"
+      "static/chunks/pages/index.js"
+    ],
+    "/StudentForm": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/StudentForm.js"
     ],
     "/_app": [
       "static/chunks/webpack.js",
