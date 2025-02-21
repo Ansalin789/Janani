@@ -1,3 +1,4 @@
+import '../styles/globals.css'
 import ConsenHead from "@/src/ConsenHead";
 import "@/styles/globals.css";
 import { Fragment, useState, useEffect } from "react";

@@ -1,35 +1,41 @@
 import React from "react";
-import styles from './Opportunities.module.css'; // Import the CSS module
+import styles from "./Opportunities.module.css"; // Import the CSS module
+import { useRouter } from "next/router"; // Change to Next.js router
 
 const Opportunities = () => {
+  const router = useRouter(); // Use Next.js router
+
   const jobData = [
     {
       title: " Teacher (Female)",
-      jobtitle:"Job Title - Qur'an Study with Tajweed & Makharij",
-      description:"Qur'an Teacher with Ijaza & having 2-3 years online teaching experience for all ages.",
+      jobtitle: "Job Title - Qur'an Study with Tajweed & Makharij",
+      description:
+        "Qur'an Teacher with Ijaza & having 2-3 years online teaching experience for all ages.",
       type: "Online",
     },
     {
       title: "Teacher (Female)",
-      jobtitle:" Arabic Language Study",
-      description:"Arabic Teacher with command of the Arabic Language, ability to design the course as per the age group and teach to all ages and should be able to teach the School Arabic curriculum, with a minimum of 2-3 Years of experience.",
+      jobtitle: " Arabic Language Study",
+      description:
+        "Arabic Teacher with command of the Arabic Language, ability to design the course as per the age group and teach to all ages and should be able to teach the School Arabic curriculum, with a minimum of 2-3 Years of experience.",
       type: "Online",
     },
     {
       title: "Admin Staff (Female)",
-      jobtitle:" Administrative Cordinator",
+      jobtitle: " Administrative Cordinator",
 
-      description:"To manage letters, communicate with clients, and interact with the public, a candidate has to possess outstanding written communication abilities. She must be well organized to keep the Schedule of teacher and kids, minimum 2 years of experience.",
+      description:
+        "To manage letters, communicate with clients, and interact with the public, a candidate has to possess outstanding written communication abilities. She must be well organized to keep the Schedule of teacher and kids, minimum 2 years of experience.",
       type: "Online",
     },
     {
       title: "Digital Marketing (M/F)",
-      jobtitle:" Digital Marketing Executive",
+      jobtitle: " Digital Marketing Executive",
 
-      description:"Plans and implements all display, email, social media, database marketing, and web advertising campaigns.Evaluates all digital marketing initiatives' performance, measures it, and reports it, and compares it to objectives (ROI and KPIs).Makes use of a strong analytical skill set to assess the entire customer experience across all channels and consumer touch points.Prepares, carries out, and evaluates conversion tests and experiments.",
+      description:
+        "Plans and implements all display, email, social media, database marketing, and web advertising campaigns.Evaluates all digital marketing initiatives' performance, measures it, and reports it, and compares it to objectives (ROI and KPIs).Makes use of a strong analytical skill set to assess the entire customer experience across all channels and consumer touch points.Prepares, carries out, and evaluates conversion tests and experiments.",
       type: "Online",
     },
-   
   ];
 
   return (
@@ -45,16 +51,21 @@ const Opportunities = () => {
           </div>
         ))}
       </div>
-      <br/>
-      <br/>
-      <br/>
+      <br />
+      <br />
+      <br />
       <div className={inlineStyles.container}>
-        <h2 style={inlineStyles.heading}>Can’t find what you’re looking for?</h2>
+        <h2 style={inlineStyles.heading}>
+          Can't find what you're looking for?
+        </h2>
         <p style={inlineStyles.subheading}>
           Register on our Candidate Portal and get notified when new roles that
           match your skills open up.
         </p>
-        <button style={inlineStyles.button}>
+        <button
+          style={inlineStyles.button}
+          onClick={() => router.push("/HiringForm")} // Use router.push instead
+        >
           REGISTER HERE <span style={inlineStyles.arrow}>→</span>
         </button>
       </div>
