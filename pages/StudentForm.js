@@ -6,7 +6,6 @@ import "react-phone-input-2/lib/style.css";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import Image from "next/image";
-import { getCountries } from "react-phone-number-input/input";
 import en from "react-phone-number-input/locale/en.json";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
@@ -42,6 +41,7 @@ const MultiStepForm = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [gender, setGender] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("");
 
@@ -60,13 +60,13 @@ const MultiStepForm = () => {
   const [preferredToTime, setPreferredToTime] = useState("");
   const [availableTimes, setAvailableTimes] = useState([]);
   const generateReferralId = () => {
-    const specialChars = 'ALF-REFID-';
+    const specialChars = "ALF-REFID-";
     const randomNum = Math.floor(10000 + Math.random() * 90000); // Ensures a 5-digit number
     return specialChars + randomNum;
-    };
+  };
 
-    // Initialize the referral ID when the component is loaded
-    const [referral, setReferral] = useState(generateReferralId());
+  // Initialize the referral ID when the component is loaded
+  const [referral, setReferral] = useState(generateReferralId());
 
   /**
    * Handles phone number changes
@@ -139,6 +139,10 @@ const MultiStepForm = () => {
       return { isValid: false, field: "Email Format" };
     }
 
+    if (!gender.trim() || gender.length < 3) {
+      return { isValid: false, field: "Gender (minimum 3 characters)" };
+    }
+
     if (!countryCode) {
       return { isValid: false, field: "Country Code" };
     }
@@ -153,11 +157,12 @@ const MultiStepForm = () => {
   };
 
   const validateStep2 = () => {
-    if (learningInterest.length !== 1) return false;
-    if (!numberOfStudents) return false;
-    if (!preferredTeacher) return false;
-    if (!referralSource) return false;
-    return true;
+    return (
+      learningInterest.length === 1 &&
+      numberOfStudents &&
+      preferredTeacher &&
+      referralSource
+    );
   };
 
   const validateStep3 = () => {
@@ -276,73 +281,11 @@ const MultiStepForm = () => {
    * @param {string} country - The country code
    * @returns {string} The corresponding phone country code
    */
-  //   const getCountryCode = (country) => {
-  //     const countryCodes = {
-  //       us: "1", // United States
-  //       ca: "1", // Canada
-  //       gb: "44", // United Kingdom
-  //       ae: "971", // UAE
-  //       sa: "966", // Saudi Arabia
-  //       qa: "974", // Qatar
-  //       kw: "965", // Kuwait
-  //       bh: "973", // Bahrain
-  //       om: "968", // Oman
-  //       pk: "92", // Pakistan
-  //       in: "91", // India
-  //       bd: "880", // Bangladesh
-  //       my: "60", // Malaysia
-  //       id: "62", // Indonesia
-  //       au: "61", // Australia
-  //       nz: "64", // New Zealand
-  //       sg: "65", // Singapore
-  //       de: "49", // Germany
-  //       fr: "33", // France
-  //       it: "39", // Italy
-  //       es: "34", // Spain
-  //       nl: "31", // Netherlands
-  //       be: "32", // Belgium
-  //       ch: "41", // Switzerland
-  //       se: "46", // Sweden
-  //       no: "47", // Norway
-  //       dk: "45", // Denmark
-  //       ie: "353", // Ireland
-  //       za: "27", // South Africa
-  //       eg: "20", // Egypt
-  //       ma: "212", // Morocco
-  //       ng: "234", // Nigeria
-  //       ke: "254", // Kenya
-  //       jp: "81", // Japan
-  //       kr: "82", // South Korea
-  //       cn: "86", // China
-  //       br: "55", // Brazil
-  //       mx: "52", // Mexico
-  //       ar: "54", // Argentina
-  //     };
-  //     return countryCodes[country.toLowerCase()] || "";
-  //   };
 
   /**
    * Handles country selection changes
    * @param {React.ChangeEvent<HTMLSelectElement>} e - The change event
    */
-  //   const handleCountryChange = (e) => {
-  //     const selectedCountry = e.target.value;
-  //     const selectedCountryCode = getCountryCode(selectedCountry);
-
-  //     console.log("Country Change:", {
-  //       country: selectedCountry,
-  //       countryCode: selectedCountryCode,
-  //     });
-
-  //     setCountry(selectedCountry);
-  //     setCountryCode(selectedCountryCode);
-
-  //     // Update cities based on selected country
-  //     const selectedCities = countryCityMap[selectedCountry.toLowerCase()] || [];
-  //     console.log("Selected Cities:", selectedCities); // Debugging line
-  //     setCities(selectedCities);
-  //     setCity(""); // Reset city when country changes
-  //   };
 
   const formatTime = (hours, minutes) => {
     const period = hours >= 12 ? "PM" : "AM";
@@ -352,19 +295,23 @@ const MultiStepForm = () => {
   };
 
   const calculatePreferredToTime = (fromTime) => {
-    const timeParts = fromTime.split(":");
-    if (timeParts.length !== 2) return "12:00 AM"; // Default to '12:00 AM' if format is incorrect
-
-    const hours = parseInt(timeParts[0].trim(), 10);
-    const minutes = parseInt(timeParts[1].trim(), 10);
-
-    if (isNaN(hours) || isNaN(minutes)) return "12:00 AM"; // Default to '12:00 AM' if parsing fails
-
-    const totalMinutes = hours * 60 + minutes + 30; // Add 30 minutes
-    const newHours = Math.floor(totalMinutes / 60) % 24; // Ensure hours wrap around after 24
+    const match = fromTime.match(/(\d+):(\d+) (\w{2})/);
+    if (!match) return "12:00 AM"; // Fallback if the format is incorrect
+  
+    let [hours, minutes, period] = match;
+    hours = parseInt(hours, 10);
+    minutes = parseInt(minutes, 10);
+  
+    // Convert to 24-hour format
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+  
+    // Add 30 minutes
+    const totalMinutes = hours * 60 + minutes + 30;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
     const newMinutes = totalMinutes % 60;
-
-    return formatTime(newHours, newMinutes); // Format the time correctly
+  
+    return formatTime(newHours, newMinutes);
   };
 
   useEffect(() => {
@@ -374,475 +321,500 @@ const MultiStepForm = () => {
   }, [country]);
 
   return (
-    <div className="max-w-[40%] mx-auto justify-center mt-8 p-4 rounded-br-[20px] rounded-tl-[20px] rounded-bl-[10px] rounded-tr-[10px] shadow-md bg-gradient-to-r from-[#e3e8f4] via-[#94b3fa52] to-[#e3e8f4]">
-      <div className="flex justify-between items-center mb-4">
-        <div className="text-sm font-medium">Contact</div>
-        <div className="text-sm font-medium">{step * 33}%</div>
-      </div>
-      <div className="w-full bg-[#fff] rounded-full h-2.5 mb-6">
-        <div
-          className="bg-[#293552] h-2.5 rounded-full"
-          style={{ width: `${step * 33}%` }}
-        ></div>
-      </div>
+    <div className="align-middle p-6 h-[100vh] bg-gradient-to-r from-[#3b4a6d52] via-[#293453] to-[#3b4a6d52]">
+      <div className="max-w-[40%] mx-auto justify-center p-6 align-middle rounded-br-[20px] rounded-tl-[20px] rounded-bl-[10px] rounded-tr-[10px] shadow-md bg-gradient-to-r from-[#fff] via-[#f8f8f8] to-[#fff]">
+        <div className="flex justify-between items-center mb-2">
+          <div className="text-sm font-medium">Complete 3 Steps</div>
+          <div className="text-sm font-medium">{step * 33}%</div>
+        </div>
+        <div className="w-full bg-[#dfdfdf] rounded-full h-2.5 mb-6">
+          <div
+            className="bg-[#293552] h-2.5 rounded-full"
+            style={{ width: `${step * 33}%` }}
+          ></div>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        {step === 1 && (
-          <div>
-            <div className="flex items-center justify-center mb-4 p-2">
-              <Image
-                src="/assets/img/alf.png"
-                alt="Logo"
-                width={160}
-                height={160}
-                className="mr-10"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-6 mb-4">
-              <div>
-                <label
-                  htmlFor="First Name"
-                  className="text-[14px] text-[#293453]"
-                >
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                  minLength={3}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100`}
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="Last Name"
-                  className="text-[14px] text-[#293453]"
-                >
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                  minLength={3}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100`}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-6 mb-4">
-              <div>
-                <label htmlFor="Email" className="text-[14px] text-[#293453]">
-                  Email
-                </label>
-                <br />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  minLength={3}
-                  className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100`}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="Phone Number"
-                  className="text-[14px] text-[#293453]"
-                >
-                  Phone Number
-                </label>
-                <PhoneInput
-                  country={countryCode.toLowerCase()}
-                  value={phoneNumber ? String(phoneNumber) : ""}
-                  onChange={handlePhoneChange}
-                  inputClass="w-full rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] "
-                  containerClass="w-full py-1"
-                  buttonStyle={{
-                    backgroundColor: "rgb(243 244 246)",
-                    borderColor: "#e5e7eb",
-                  }}
-                  inputStyle={{
-                    backgroundColor: "rgb(243 244 246)",
-                    width: "100%",
-                    borderColor: "#e5e7eb",
-                  }}
-                  placeholder="Phone Number"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-6 mb-4">
-              <div>
-                <label htmlFor="Country" className="text-[14px] text-[#293453]">
-                  Country
-                </label>
-                <CountryDropdown
-                  value={country}
-                  onChange={(val) => {
-                    setCountry(val);
-                  }}
-                  className="w-full px-4 py-[12px] rounded-lg text-[12px] text-[#293552] border border-gray-300 focus:ring-1 focus:ring-[#293552] focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="City" className="text-[14px] text-[#293453]">
-                  City
-                </label>
-                <select
-                  id="city"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-4 py-[12px] rounded-lg text-[#293552] text-[12px] border border-gray-300 focus:ring-1 focus:ring-[#293552] focus:outline-none"
-                >
-                  <option value="">Select a city</option>
-                  {cities?.map((cityName) => (
-                    <option key={cityName} value={cityName}>
-                      {cityName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
+        <form onSubmit={handleSubmit}>
+          {step === 1 && (
             <div>
-              <label
-                htmlFor="Referral Code"
-                className="text-[14px] text-[#293453]"
-              >
-                Referral Code
-              </label>
-              <br />
-              <input
-                type="text"
-                placeholder="Referral Code"
-                value={referral}
-                onChange={(e) => setReferral(e.target.value)}
-                className="p-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100 w-1/2"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={nextStep}
-              className="justify-end mt-10 ml-[240px] text-[16px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex"
-            >
-              Next &nbsp; <FcNext className="mt-1 text-[#fff]" />
-            </button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div>
-            <button
-              type="button"
-              onClick={prevStep}
-              aria-label="Go back to previous step"
-              className="text-gray-500 mb-4"
-            >
-              ←Back
-            </button>
-            <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
-              What will you use AL Furquan for?
-            </h2>
-            <div className="grid grid-cols-3 gap-4 mb-4 text-[13px]">
-              {["Quran", "Islamic Studies", "Arabic"].map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setLearningInterest([option])}
-                  className={`hover:transition-all duration-500 ease-in-out rounded-xl p-3 text-black shadow-md ${
-                    learningInterest[0] === option
-                      ? "bg-[#3c85fa2e]"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-
-            {learningInterest.includes("Other") && (
-              <div className="mb-6">
-                <input
-                  type="text"
-                  placeholder="Please specify your course"
-                  value={iqraUsageOther}
-                  onChange={(e) => setIqraUsageOther(e.target.value)}
-                  className="w-full p-3 border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100"
+              <div className="flex items-center justify-center mb-4 p-2">
+                <Image
+                  src="/assets/img/alf.png"
+                  alt="Logo"
+                  width={160}
+                  height={160}
+                  className="mr-10"
                 />
               </div>
-            )}
+              <div className="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label
+                    htmlFor="First Name"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="First Name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    minLength={3}
+                    className={`w-full p-2 border text-[13px] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
+                  />
+                </div>
 
-            <h2 className="text-center font-bold mb-4 text-[#293552] text-[14px]">
-              How many students will join?
-            </h2>
-            <div className="grid grid-cols-5 gap-4 mb-6 rounded-xl text-[13px]">
-              {[1, 2, 3, 4, 5].map((count) => (
-                <button
-                  key={count}
-                  type="button"
-                  onClick={() => setNumberOfStudents(count.toString())}
-                  className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
-                    numberOfStudents === count.toString()
-                      ? "bg-[#3c85fa2e]"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  {count}
-                </button>
-              ))}
-            </div>
-
-            <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
-              Which teacher would you like?
-            </h2>
-            <div className="grid grid-cols-3 gap-4 mb-6 text-[13px]">
-              {["Male", "Female", "Either"].map((preference) => (
-                <button
-                  key={preference}
-                  type="button"
-                  onClick={() => setPreferredTeacher(preference)}
-                  className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
-                    preferredTeacher === preference
-                      ? "bg-[#3c85fa2e]"
-                      : "bg-gray-100"
-                  }`}
-                >
-                  {preference}
-                </button>
-              ))}
-            </div>
-
-            <div className="mt-4">
-              <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
-                Where did you hear about AL Furquan?
-              </h2>
-              <div className="grid grid-cols-5 gap-4 mb-6 text-[13px]">
-                {["Friend", "Social Media", "E-Mail", "Google", "Other"].map(
-                  (source) => (
-                    <button
-                      key={source}
-                      type="button"
-                      onClick={() => setReferralSource(source)}
-                      className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
-                        referralSource === source
-                          ? "bg-[#3c85fa2e]"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      {source}
-                    </button>
-                  )
-                )}
+                <div>
+                  <label
+                    htmlFor="Last Name"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Last Name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    minLength={3}
+                    className={`w-full p-2 border text-[13px] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label htmlFor="Email" className="text-[14px] text-[#293453]">
+                    Email
+                  </label>
+                  <br />
+                  <input
+                    type="email"
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    minLength={3}
+                    className={`w-full p-2 border rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="Gender"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    Gender
+                  </label>
+                  <br />
+                  <input
+                    type="text"
+                    placeholder="Gender"
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    required
+                    minLength={3}
+                    className={`w-full p-2 border rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label
+                    htmlFor="Phone Number"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    Phone Number
+                  </label>
+                  <PhoneInput
+                    country={countryCode.toLowerCase()}
+                    value={phoneNumber ? String(phoneNumber) : ""}
+                    onChange={handlePhoneChange}
+                    inputClass="w-full rounded-lg py-[18px] focus:outline-none focus:ring-1 focus:ring-[#293552]"
+                    containerClass="w-full"
+                    buttonStyle={{
+                      backgroundColor: "rgb(249,250,251)",
+                      borderColor: "#e5e7eb",
+                    }}
+                    inputStyle={{
+                      backgroundColor: "rgb(249,250,251)",
+                      width: "100%",
+                      borderColor: "#e5e7eb",
+                    }}
+                    placeholder="Phone Number"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="Country"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    Country
+                  </label>
+                  <CountryDropdown
+                    value={country}
+                    onChange={(val) => {
+                      setCountry(val);
+                    }}
+                    className="w-full px-4 py-[8px] rounded-lg text-[13px] text-[#293552] border focus:ring-1 focus:ring-[#293552] focus:outline-none bg-gray-50"
+                  />
+                </div>
               </div>
 
-              {referralSource === "Other" && (
+              <div className="grid grid-cols-2 gap-6 mb-4">
+                <div>
+                  <label htmlFor="City" className="text-[14px] text-[#293453]">
+                    City
+                  </label>
+                  <select
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full px-4 py-[9px] rounded-lg text-[#293552] text-[13px] border  focus:ring-1 focus:ring-[#293552] focus:outline-none bg-gray-50"
+                  >
+                    <option value="">Select a city</option>
+                    {cities?.map((cityName) => (
+                      <option key={cityName} value={cityName}>
+                        {cityName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="Referral Code"
+                    className="text-[14px] text-[#293453]"
+                  >
+                    Referral Code
+                  </label>
+
+                  <br />
+                  <input
+                    type="text"
+                    placeholder="Referral Code"
+                    value={referral}
+                    onChange={(e) => setReferral(e.target.value)}
+                    className={`w-full p-2 border text-[13px] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={nextStep}
+                className="justify-end mt-10 ml-[240px] text-[16px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex"
+              >
+                Next &nbsp; <FcNext className="mt-1 text-[#fff]" />
+              </button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div>
+              <button
+                type="button"
+                onClick={prevStep}
+                aria-label="Go back to previous step"
+                className="text-gray-500 mb-4"
+              >
+                ←Back
+              </button>
+              <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
+                What will you use AL Furquan for?
+              </h2>
+              <div className="grid grid-cols-3 gap-4 mb-4 text-[13px]">
+                {["Quran", "Islamic Studies", "Arabic"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setLearningInterest([option])}
+                    className={`hover:transition-all duration-500 ease-in-out rounded-xl p-3 text-black shadow-md ${
+                      learningInterest[0] === option
+                        ? "bg-[#3c85fa2e]"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+
+              {learningInterest.includes("Other") && (
                 <div className="mb-6">
                   <input
                     type="text"
-                    placeholder="Please specify where you heard about us"
-                    value={referralSourceOther}
-                    onChange={(e) => setReferralSourceOther(e.target.value)}
-                    className="w-full p-4 border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100"
+                    placeholder="Please specify your course"
+                    value={iqraUsageOther}
+                    onChange={(e) => setIqraUsageOther(e.target.value)}
+                    className="w-full p-3 border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100"
                   />
                 </div>
               )}
-            </div>
 
-            <button
-              type="button"
-              onClick={nextStep}
-              className="justify-end mt-10 ml-[240px] text-[16px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex"
-            >
-              Next &nbsp; <FcNext className="mt-1 text-[#fff]" />
-            </button>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="p-4 rounded-3xl">
-            <button
-              type="button"
-              onClick={prevStep}
-              className="text-gray-500 mb-4 hover:text-gray-700 transition-colors"
-            >
-              Back
-            </button>
-
-            <div className="text-center mb-6">
-              <h2 className="text-[18px] font-bold text-[#293552]">
-                Select a Date and Time
+              <h2 className="text-center font-bold mb-4 text-[#293552] text-[14px]">
+                How many students will join?
               </h2>
-            </div>
-
-            <div className="flex md:flex-cols-2 gap-6">
-              {/* Calendar Section */}
-              <div className="p-2 rounded-[20px] shadow-[0px_4px_16px_rgba(17,17,26,0.1),_0px_8px_24px_rgba(17,17,26,0.1),_0px_16px_56px_rgba(17,17,26,0.1)]">
-                <style
-                  dangerouslySetInnerHTML={{
-                    __html: `
-                        .react-calendar {
-                            width: 100% !important;
-                            background-color: rgb(229, 231, 235) !important;
-                            border: none !important;
-                            border-radius: 20px !important;
-                            padding:15px !important;
-                        }
-                        
-                        .react-calendar .react-calendar__month-view__days__day {
-                            font-size: 10px !important;
-                            color: black !important;
-                        }
-
-                        .react-calendar .react-calendar__month-view__days__day--weekend:nth-child(7n + 1) {
-                            color: #ef4444 !important;
-                        }
-                        
-                        .react-calendar .react-calendar__tile--active,
-                        .react-calendar .selected-date {
-                            background-color: #293552 !important;
-                            color: white !important;
-                            border-radius: 6px !important;
-                        }
-                        
-                        .react-calendar .react-calendar__tile--active.react-calendar__month-view__days__day--weekend:nth-child(7n + 1),
-                        .react-calendar .selected-date.react-calendar__month-view__days__day--weekend:nth-child(7n + 1) {
-                            color: white !important;
-                        }
-                    `,
-                  }}
-                />
-                <Calendar
-                  onChange={handleDateChange}
-                  value={startDate}
-                  tileDisabled={isTileDisabled}
-                  className="mx-auto custom-calendar"
-                  selectRange={false}
-                  minDate={new Date()}
-                  tileClassName={({ date, view }) =>
-                    view === "month" &&
-                    date.toDateString() === startDate.toDateString()
-                      ? "selected-date"
-                      : null
-                  }
-                />
+              <div className="grid grid-cols-5 gap-4 mb-6 rounded-xl text-[13px]">
+                {[1, 2, 3, 4, 5].map((count) => (
+                  <button
+                    key={count}
+                    type="button"
+                    onClick={() => setNumberOfStudents(count.toString())}
+                    className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
+                      numberOfStudents === count.toString()
+                        ? "bg-[#3c85fa2e]"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                ))}
               </div>
-              {/* Available Times Section */}
-              <div className="p-2 rounded-[20px] w-60 shadow-[0px_4px_16px_rgba(17,17,26,0.1),_0px_8px_24px_rgba(17,17,26,0.1),_0px_16px_56px_rgba(17,17,26,0.1)]">
-                <h3 className="text-[13px] text-center align-middle font-semibold mb-4 text-[#293552] p-2">
-                  Available Time Slots
-                </h3>
-                <div className="grid grid-cols-1 text-center gap-4 mb-4">
-                  <div>
-                    {/* <p className="text-sm font-medium mb-2">From</p> */}
-                    <div className="max-h-[250px] overflow-y-auto scrollbar-none">
-                      <div className="grid grid-cols-1 gap-3 text-[11px]">
-                        {availableTimes.map((time) => (
-                          <button
-                            key={time}
-                            type="button"
-                            value={preferredFromTime}
-                            onClick={() => {
-                              const fromTime = time;
 
-                              // Check if fromTime is a valid string
-                              if (
-                                typeof fromTime === "string" &&
-                                fromTime.includes(":")
-                              ) {
-                                setPreferredFromTime(fromTime);
-                                const toTime =
-                                  calculatePreferredToTime(fromTime);
-                                setPreferredToTime(toTime);
-                              } else {
-                                console.error(
-                                  "Invalid fromTime format:",
-                                  fromTime
-                                );
-                                // Optionally, handle the error (e.g., show a message to the user)
-                              }
-                            }}
-                            className={`p-2 rounded-lg transition-all duration-200 ${
-                              preferredFromTime === time
-                                ? "bg-[#293552] text-white shadow-lg transform scale-100 p-2 text-[10px]"
-                                : "bg-gray-200 hover:bg-gray-100 p-2 text-[#293552] text-[10px]"
-                            }`}
-                          >
-                            {time}
-                          </button>
-                        ))}
+              <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
+                Which teacher would you like?
+              </h2>
+              <div className="grid grid-cols-3 gap-4 mb-6 text-[13px]">
+                {["Male", "Female", "Either"].map((preference) => (
+                  <button
+                    key={preference}
+                    type="button"
+                    onClick={() => setPreferredTeacher(preference)}
+                    className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
+                      preferredTeacher === preference
+                        ? "bg-[#3c85fa2e]"
+                        : "bg-gray-100"
+                    }`}
+                  >
+                    {preference}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4">
+                <h2 className="text-[14px] text-center font-bold mb-4 text-[#293552]">
+                  Where did you hear about AL Furquan?
+                </h2>
+                <div className="grid grid-cols-5 gap-4 mb-6 text-[13px]">
+                  {["Friend", "Social Media", "E-Mail", "Google", "Other"].map(
+                    (source) => (
+                      <button
+                        key={source}
+                        type="button"
+                        onClick={() => setReferralSource(source)}
+                        className={`p-3 hover:transition-all duration-500 ease-in-out rounded-xl text-[#000] ${
+                          referralSource === source
+                            ? "bg-[#3c85fa2e]"
+                            : "bg-gray-100"
+                        }`}
+                      >
+                        {source}
+                      </button>
+                    )
+                  )}
+                </div>
+
+                {referralSource === "Other" && (
+                  <div className="mb-6">
+                    <input
+                      type="text"
+                      placeholder="Please specify where you heard about us"
+                      value={referralSourceOther}
+                      onChange={(e) => setReferralSourceOther(e.target.value)}
+                      className="w-full p-4 border rounded-xl focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-100"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={nextStep}
+                className="justify-end mt-10 ml-[240px] text-[16px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex"
+              >
+                Next &nbsp; <FcNext className="mt-1 text-[#fff]" />
+              </button>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="p-4 rounded-3xl">
+              <button
+                type="button"
+                onClick={prevStep}
+                className="text-gray-500 mb-4 hover:text-gray-700 transition-colors"
+              >
+                Back
+              </button>
+
+              <div className="text-center mb-6">
+                <h2 className="text-[18px] font-bold text-[#293552]">
+                  Select a Date and Time
+                </h2>
+              </div>
+
+              <div className="flex md:flex-cols-2 gap-6">
+                {/* Calendar Section */}
+                <div className="p-2 rounded-[20px] shadow-[0px_4px_16px_rgba(17,17,26,0.1),_0px_8px_24px_rgba(17,17,26,0.1),_0px_16px_56px_rgba(17,17,26,0.1)]">
+                  <style
+                    dangerouslySetInnerHTML={{
+                      __html: `
+                          .react-calendar {
+                              width: 100% !important;
+                              background-color: rgb(229, 231, 235) !important;
+                              border: none !important;
+                              border-radius: 20px !important;
+                              padding:15px !important;
+                          }
+                          
+                          .react-calendar .react-calendar__month-view__days__day {
+                              font-size: 10px !important;
+                              color: black !important;
+                          }
+
+                          .react-calendar .react-calendar__month-view__days__day--weekend:nth-child(7n + 1) {
+                              color: #ef4444 !important;
+                          }
+                          
+                          .react-calendar .react-calendar__tile--active,
+                          .react-calendar .selected-date {
+                              background-color: #293552 !important;
+                              color: white !important;
+                              border-radius: 6px !important;
+                          }
+                          
+                          .react-calendar .react-calendar__tile--active.react-calendar__month-view__days__day--weekend:nth-child(7n + 1),
+                          .react-calendar .selected-date.react-calendar__month-view__days__day--weekend:nth-child(7n + 1) {
+                              color: white !important;
+                          }
+                      `,
+                    }}
+                  />
+                  <Calendar
+                    onChange={handleDateChange}
+                    value={startDate}
+                    tileDisabled={isTileDisabled}
+                    className="mx-auto custom-calendar"
+                    selectRange={false}
+                    minDate={new Date()}
+                    tileClassName={({ date, view }) =>
+                      view === "month" &&
+                      date.toDateString() === startDate.toDateString()
+                        ? "selected-date"
+                        : null
+                    }
+                  />
+                </div>
+                {/* Available Times Section */}
+                <div className="p-2 rounded-[20px] w-60 shadow-[0px_4px_16px_rgba(17,17,26,0.1),_0px_8px_24px_rgba(17,17,26,0.1),_0px_16px_56px_rgba(17,17,26,0.1)]">
+                  <h3 className="text-[13px] text-center align-middle font-semibold mb-4 text-[#293552] p-2">
+                    Available Time Slots
+                  </h3>
+                  <div className="grid grid-cols-1 text-center gap-4 mb-4">
+                    <div>
+                      {/* <p className="text-sm font-medium mb-2">From</p> */}
+                      <div className="max-h-[250px] overflow-y-auto scrollbar-none">
+                        <div className="grid grid-cols-1 gap-3 text-[11px]">
+                          {availableTimes.map((time) => (
+                            <button
+                              key={time}
+                              type="button"
+                              value={preferredFromTime}
+                              onClick={() => {
+                                const fromTime = time;
+
+                                // Check if fromTime is a valid string
+                                if (
+                                  typeof fromTime === "string" &&
+                                  fromTime.includes(":")
+                                ) {
+                                  setPreferredFromTime(fromTime);
+                                  const toTime =
+                                    calculatePreferredToTime(fromTime);
+                                  setPreferredToTime(toTime);
+                                } else {
+                                  console.error(
+                                    "Invalid fromTime format:",
+                                    fromTime
+                                  );
+                                  // Optionally, handle the error (e.g., show a message to the user)
+                                }
+                              }}
+                              className={`p-2 rounded-lg transition-all duration-200 ${
+                                preferredFromTime === time
+                                  ? "bg-[#293552] text-white shadow-lg transform scale-100 p-2 text-[10px]"
+                                  : "bg-gray-200 hover:bg-gray-100 p-2 text-[#293552] text-[10px]"
+                              }`}
+                            >
+                              {time}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    {/* <div className=''>
+                                          <p className="text-sm font-medium mb-2">To</p>
+                                          <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
+                                              <div className="grid grid-cols-1 gap-3 text-[10px]">
+                                                  {availableTimes.map((time) => (
+                                                      <button
+                                                          key={time}
+                                                          type="button"
+                                                          onClick={() => setPreferredToTime(time)}
+                                                          className={`p-3 rounded-lg transition-all duration-200 ${
+                                                              preferredToTime === time 
+                                                              ? 'bg-[#293552] text-white shadow-lg transform scale-100' 
+                                                              : 'bg-gray-200 hover:bg-gray-100'
+                                                          }`}
+                                                      >
+                                                          {time}
+                                                      </button>
+                                                  ))}
+                                              </div>
+                                          </div>
+                                      </div> */}
                   </div>
-                  {/* <div className=''>
-                                        <p className="text-sm font-medium mb-2">To</p>
-                                        <div className="max-h-[300px] overflow-y-auto scrollbar-hide">
-                                            <div className="grid grid-cols-1 gap-3 text-[10px]">
-                                                {availableTimes.map((time) => (
-                                                    <button
-                                                        key={time}
-                                                        type="button"
-                                                        onClick={() => setPreferredToTime(time)}
-                                                        className={`p-3 rounded-lg transition-all duration-200 ${
-                                                            preferredToTime === time 
-                                                            ? 'bg-[#293552] text-white shadow-lg transform scale-100' 
-                                                            : 'bg-gray-200 hover:bg-gray-100'
-                                                        }`}
-                                                    >
-                                                        {time}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div> */}
                 </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`justify-center ml-48 mt-8 text-[14px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex ${
-                isLoading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Submitting...
-                </div>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          </div>
-        )}
-      </form>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`justify-center ml-48 mt-8 text-[14px] p-2 align-middle py-2 px-4 bg-[#293552] text-white font-semibold hover:shadow-inner rounded-full shadow-lg flex ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {isLoading ? (
+                  <div className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Submitting...
+                  </div>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
     </div>
   );
 };
