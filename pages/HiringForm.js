@@ -75,7 +75,7 @@ const HiringForm = () => {
 
       console.log("API Response:", response.data);
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         alert("Applicant added successfully!");
         setShowAddApplicant(false);
         setAddApplicantForm({
