@@ -66,7 +66,7 @@ const HiringForm = () => {
 
     try {
       const response = await axios.post(
-        "https://alfurqanacademy.tech//recruit",
+        "https://alfurqanacademy.tech/recruit",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
