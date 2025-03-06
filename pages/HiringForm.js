@@ -66,7 +66,7 @@ const HiringForm = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/recruit",
+        "https://alfurqanacademy.tech//recruit",
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -342,8 +342,10 @@ const HiringForm = () => {
                 className="w-full px-4 py-2 rounded-lg text-[11px] border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="Arabic Teacher">Arabic Teacher</option>
-                <option value="English Teacher">Quran Teacher</option>
-                <option value="Math Teacher">Islamic Studies Teacher</option>
+                <option value="Quran Teacher">Quran Teacher</option>
+                <option value="Islamic Studies Teacher">
+                  Islamic Studies Teacher
+                </option>
               </select>
             </div>
             <div>
