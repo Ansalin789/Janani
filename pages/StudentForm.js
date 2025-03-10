@@ -407,15 +407,17 @@ const MultiStepForm = () => {
                     Gender
                   </label>
                   <br />
-                  <input
-                    type="text"
-                    placeholder="Gender"
+                  <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                     required
-                    minLength={3}
-                    className={`w-full p-2 border rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50`}
-                  />
+                    className="w-full p-2 border rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-[#293552] bg-gray-50"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-6 mb-4">
